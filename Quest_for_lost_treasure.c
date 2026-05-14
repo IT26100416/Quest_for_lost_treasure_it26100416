@@ -5,6 +5,7 @@
 #define MAP_SIZE 15
 #define WALL '#'  // wall symbol
 #define EMPTY ' ' // empty space
+#define TREASURE 'T'
 
 char map[MAP_SIZE][MAP_SIZE];
 
@@ -26,8 +27,8 @@ void fn_initializeMap()
 		map[i][MAP_SIZE - 1] = WALL; 
 	}
 
-	int placed = 0;
-	while (placed < 30)
+	int placedWalls = 0;
+	while (placedWalls < 30)
 	{
 		int r = rand() % MAP_SIZE;
 		int c = rand() % MAP_SIZE;
@@ -35,7 +36,21 @@ void fn_initializeMap()
 		if(map[r][c] == EMPTY && r > 0 && r < MAP_SIZE - 1 && c > 0 && c < MAP_SIZE - 1)
 		{
 			map[r][c] = WALL;
-			placed++;
+			placedWalls++;
+		}
+	}
+
+	int placedTreasures  = 0;
+	while(placedTreasures < 12)
+	{
+	
+		int r = rand() % MAP_SIZE;
+		int c = rand() % MAP_SIZE;
+		if(map[r][c] == EMPTY && r > 0 && r < MAP_SIZE - 1 && c > 0 && c < MAP_SIZE - 1)
+		{
+
+			map[r][c] = TREASURE;
+			placedTreasures++;
 		}
 	}
 }
@@ -54,7 +69,7 @@ void fn_printMap()
 
 int main()
 {
-	srand(time(NULL));
+	srand(time(NULL)); // random seed
 	fn_initializeMap();
 	fn_printMap();
 	return 0;
