@@ -6,11 +6,14 @@
 #define WALL '#'  // wall symbol
 #define EMPTY ' ' // empty space
 #define TREASURE 'T'
+#define HEALTH 'H'
+#define KEY 'K'
 
 char map[MAP_SIZE][MAP_SIZE];
 
 void fn_initializeMap()
 {
+	//Fill with empty
 	for (int r = 0; r < MAP_SIZE; r++)
 	{
 		for(int c = 0; c < MAP_SIZE; c++)
@@ -19,6 +22,7 @@ void fn_initializeMap()
 		}
 	}
 
+	//Borders
 	for(int i = 0; i < MAP_SIZE; i++)
 	{
 		map[0][i] = WALL;
@@ -27,6 +31,7 @@ void fn_initializeMap()
 		map[i][MAP_SIZE - 1] = WALL; 
 	}
 
+	//Random interior walls
 	int placedWalls = 0;
 	while (placedWalls < 30)
 	{
@@ -40,6 +45,7 @@ void fn_initializeMap()
 		}
 	}
 
+	//Random treasures
 	int placedTreasures  = 0;
 	while(placedTreasures < 12)
 	{
@@ -52,6 +58,35 @@ void fn_initializeMap()
 			map[r][c] = TREASURE;
 			placedTreasures++;
 		}
+	}
+
+	//Random health packs
+	int placedHealth = 0;
+	while (placedHealth < 3)
+	{
+		int r = rand() % MAP_SIZE;
+		int c = rand() % MAP_SIZE;
+		if(map[r][c] == EMPTY && r > 0 && r < MAP_SIZE - 1 && c > 0 && c < MAP_SIZE - 1)
+		{
+			map[r][c] = HEALTH;
+			placedHealth++;
+
+		}
+
+	}
+
+	//Random keys
+	int placedKeys = 0;
+	while (placedKeys < 3)
+	{
+		int r = rand() % MAP_SIZE;
+		int c = rand() % MAP_SIZE;
+		if(map[r][c] == EMPTY && r > 0 && r < MAP_SIZE - 1 && c > 0 && c < MAP_SIZE - 1)
+		{
+			map[r][c] = KEY;
+			placedKeys++;
+		}
+
 	}
 }
 
