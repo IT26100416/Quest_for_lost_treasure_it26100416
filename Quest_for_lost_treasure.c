@@ -11,12 +11,15 @@
 #define DOOR 'D'
 
 char map[MAP_SIZE][MAP_SIZE];
-int hiddenTrap[MAP_SIZE][MAP_SIZE];
+int hiddenTrap[MAP_SIZE][MAP_SIZE]; // 1 = trap , 0 = no trap
 
-int playerHealth = 10;
-int playerRow = 0, playerCol = 0;
-int playerKeys  = 0;
-int playerTreasure = 0;
+int playerCount = 3;
+int playerHealth[3];
+int playerRow[3], playerCol[3];
+int playerKeys[3];
+int playerTreasure[3];
+
+int totalTreasures = 12;
 
 void fn_initializeMap()
 {
@@ -54,7 +57,7 @@ void fn_initializeMap()
 
 	//Random treasures
 	int placedTreasures  = 0;
-	while(placedTreasures < 12)
+	while(placedTreasures < totalTreasures)
 	{
 	
 		int r = rand() % MAP_SIZE;
@@ -123,16 +126,23 @@ void fn_initializeMap()
 		}
 	}
 
-	//Place player 1
-	int r,c;
+	//Place players
+	for(int p = 0; p < playerCount; p++)
+	{
+		int r,c;
 		do
 		{
 			r = rand() % MAP_SIZE;
 			c = rand() % MAP_SIZE;
 		}while (map[r][c] != EMPTY);
 
-		playerRow = r;
-		playerCol = c;
+		playerRow[p] = r;
+		playerCol[p] = c;
+		playerHealth[p] = 10;
+		playerKeys[p] = 0;
+		playerTreasure[p] = 0;
+
+	}
 }
 
 void fn_printMap()
@@ -142,24 +152,38 @@ void fn_printMap()
 		for(int c = 0; c < MAP_SIZE; c++)
 		{
 			char tile = map[r][c];
-			if(playerRow == r && playerCol == c)
+			int printed = 0;
+			for(int p = 0; p < playerCount; p++)
 			{
-				printf("P ");//player
+				if(playerRow[p] == r && playerCol[p] == c && playerHealth[p] > 0)
+				{
+					printf("%d ", p+1);
+					printed = 1;
+					break;
+				}
 			}
-			else
+			if(!printed)
 			{
 				printf("%c ", tile);
 			}
 		}
 		printf("\n");
 	}
-	printf("Health: %d | Keys: %d | Treasure: %d\n", playerHealth, playerKeys, playerTreasure);
+		for(int p = 0; p < playerCount; p++)
+		{
+			printf("Player %d -> HP:%d Keys:%d Treasure:%d\n", p+1, playerHealth[p], playerKeys[p], playerTreasure[p]);
+		}
 }
 
-void fn_movePlayer(char move)
+int fn_movePlayer(int index, char move)
 {
-	int r = playerRow;
-	int c = playerCol;
+	if(playerHealth[index] <= 0)
+	{
+		return 0;
+	}
+
+	int r = playerRow[index];
+	int c = playerCol[index];
 
 	if(move == 'W' || move == 'w')
 	{
@@ -180,56 +204,62 @@ void fn_movePlayer(char move)
 	//check if valid (not wall and outside)
 	if(r < 0 || r >= MAP_SIZE || c < 0 || c >= MAP_SIZE)
 	{
-		return;
+		return 0;
 	}
 
 	char tile = map[r][c];
 
 	if(tile == WALL)
 	{
-		return;
+		return 0;
 	}
 
-	if(tile == DOOR && playerKeys == 0)
+	if(tile == DOOR && playerKeys[index] == 0)
 	{
-		printf("Door is locked! Need a key.\n");
-		return;
+		printf("Player %d: Door is locked! Need a key.\n\n", index+1);
+		return 0;
 	}
 
-	playerRow = r;
-	playerCol = c;
+	playerRow[index] = r;
+	playerCol[index] = c;
 
 	if(tile == TREASURE)
 	{
-		playerTreasure++;
+		playerTreasure[index]++;
 		map[r][c] = EMPTY;
-		printf("Collected treasure! Total: %d\n", playerTreasure);
+		printf("Player %d collected treasure!\n\n", index+1);
+		if(playerTreasure[index] >= 5)
+		{
+			printf("Player %d WINS by collecting 5 treasures!\n", index+1);
+			return 1;
+		}
 	}
 	else if(tile == HEALTH)
 	{
-		playerHealth += 2;
+		playerHealth[index] += 2;
 		map[r][c] = EMPTY;
-		printf("Picked up health! HP: %d\n", playerHealth);
+		printf("Player %d picked up health!\n\n", index+1);
 	}
 	else if(tile == KEY)
 	{
-		playerKeys++;
+		playerKeys[index]++;
 		map[r][c] = EMPTY;
-		printf("Picked up a key! Keys: %d\n", playerKeys);
+		printf("Player %d picked up a key!\n\n", index+1);
 	}
-	else if(tile == DOOR && playerKeys > 0)
+	else if(tile == DOOR && playerKeys[index] > 0)
 	{
-		playerKeys--;
+		playerKeys[index]--;
 		map[r][c] = EMPTY;
-		printf("Unlocked a door! Keys left: %d\n", playerKeys);
+		printf("Player %d unlocked a door!\n\n", index+1);
 	}
 
 	if(hiddenTrap[r][c] == 1)
 	{
-		playerHealth -= 3;
+		playerHealth[index] -= 3;
 		hiddenTrap[r][c] = 0;//trap triggered
-		printf("Stepped on a trap! HP: %d\n", playerHealth);
+		printf("Player %d stepped on a trap!\n\n", index+1);
 	}
+	return 0;//No win yet
 }
 
 int main()
@@ -239,19 +269,27 @@ int main()
 	fn_printMap();
 
 	char move;
-	while (playerHealth > 0)
+	int currentPlayer = 0;
+	int gameOver = 0;
+	while (!gameOver)
 	{
-		printf("Enter move (W/A/S/D, Q to quit): ");
-		scanf(" %c", &move);
-		if(move == 'Q' || move == 'q')
+		if(playerHealth[currentPlayer] > 0)
 		{
-			break;
+			printf("\nPlayer %d's turn (W/A/S/D, Q to quit): ", currentPlayer+1);
+			scanf(" %c", &move);
+			if(move == 'Q' || move == 'q')
+			{
+				break;
+			}
+			if(fn_movePlayer(currentPlayer, move))
+			{
+				gameOver = 1;
+			}	
+			fn_printMap();
 		}
-	fn_movePlayer(move);
-	fn_printMap();
-	}
-
-	printf("Game Over!\n");
+		currentPlayer = (currentPlayer + 1) % playerCount;//next player
+	}	
+	printf("\nGame Over!\n");
 	return 0;
 }
 
