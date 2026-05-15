@@ -20,6 +20,7 @@ int playerKeys[3];
 int playerTreasure[3];
 
 int totalTreasures = 12;
+int numOfTreasuresToWin = 5;
 
 void fn_initializeMap()
 {
@@ -253,6 +254,37 @@ void fn_loadGame(const char *filename)
 	printf("Game loaded from %s\n", filename);	
 }
 
+void fn_updateLeaderboard(int winner, int score)
+{
+	FILE *f = fopen("leaderboard.txt", "a");
+	if(!f)
+	{
+		printf("Error updating leaderboard!\n");
+		return;
+	}
+	fprintf(f, "Player %d won with score %d\n", winner+1, score);
+	fclose(f);
+	printf("Leaderboard updated!\n");
+}
+
+void fn_showLeaderboard()
+{
+	FILE *f = fopen("leaderboard.txt", "r");
+	if(!f)
+	{
+		printf("No leaderboard yet.\n");
+		return;
+	}
+	printf("   === Leaderboard ===\n");
+	char line[256];
+	while (fgets(line, sizeof(line), f))
+	{
+		printf("%s", line);
+	}
+	fclose(f);
+	printf("   ===================\n");
+}
+
 int fn_movePlayer(int index, char move)
 {
 	if(playerHealth[index] <= 0)
@@ -306,9 +338,9 @@ int fn_movePlayer(int index, char move)
 		playerTreasure[index]++;
 		map[r][c] = EMPTY;
 		printf("Player %d collected treasure!\n\n", index+1);
-		if(playerTreasure[index] >= 5)
+		if(playerTreasure[index] >= numOfTreasuresToWin)
 		{
-			printf("Player %d WINS by collecting 5 treasures!\n", index+1);
+			printf("Player %d WINS by collecting %d treasures!\n", index+1, numOfTreasuresToWin);
 			return 1;
 		}
 	}
@@ -344,6 +376,8 @@ int main()
 {
 	srand(time(NULL)); // random seed
 	
+	fn_showLeaderboard();
+
 	char choice;
 	printf("Start new game (N) or load game (L)? ");
 	scanf(" %c", &choice);
@@ -356,6 +390,7 @@ int main()
 	{
 		fn_initializeMap();
 	}
+
 	fn_printMap();
 
 	char move;
@@ -366,13 +401,13 @@ int main()
 	{
 		if(playerHealth[currentPlayer] > 0)
 		{
-			printf("\nPlayer %d's turn (W/A/S/D, Q to quit, S to save): ", currentPlayer+1);
+			printf("\nPlayer %d's turn (W/A/S/D, Q to quit, E to save): ", currentPlayer+1);
 			scanf(" %c", &move);
 			if(move == 'Q' || move == 'q')
 			{
 				break;
 			}
-			if(move == 'S' || move == 's')
+			if(move == 'E' || move == 'e')
 			{
 				fn_saveGame("savegame.txt");
 			}
@@ -380,6 +415,7 @@ int main()
 			{
 				if(fn_movePlayer(currentPlayer, move))
 				{
+					fn_updateLeaderboard(currentPlayer, playerTreasure[currentPlayer]);
 					gameOver = 1;
 				}
 			}
