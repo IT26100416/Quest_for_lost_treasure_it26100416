@@ -13,6 +13,10 @@
 char map[MAP_SIZE][MAP_SIZE];
 int hiddenTrap[MAP_SIZE][MAP_SIZE];
 
+int playerCount = 3;
+int playerRow[3];
+int playerCol[3];
+
 void fn_initializeMap()
 {
 	//Fill with empty
@@ -116,7 +120,20 @@ void fn_initializeMap()
 			hiddenTrap[r][c] = 1;
 			placedTraps++;
 		}
+	}
 
+	//Place player
+	for(int p = 0; p < MAP_SIZE; p++)
+	{
+		int r,c;
+		do
+		{
+			r = rand() % MAP_SIZE;
+			c = rand() % MAP_SIZE;
+		}while (map[r][c] != EMPTY);
+
+		playerRow[p] = r;
+		playerCol[p] = c;
 	}
 }
 
@@ -126,7 +143,21 @@ void fn_printMap()
 	{
 		for(int c = 0; c < MAP_SIZE; c++)
 		{
-			printf("%c ", map[r][c]);
+			char tile = map[r][c];
+			int printed = 0;
+			for(int p = 0; p < playerCount; p++)
+			{
+				if(playerRow[p] == r && playerCol[p] == c)
+				{
+					printf("%d ", p+1);
+					printed = 1;
+					break;
+				}
+			}
+			if(!printed)
+			{
+				printf("%c ", tile);
+			}
 		}
 		printf("\n");
 	}
