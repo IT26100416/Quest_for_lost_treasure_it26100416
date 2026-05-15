@@ -174,6 +174,84 @@ void fn_printMap()
 			printf("Player %d -> HP:%d Keys:%d Treasure:%d\n", p+1, playerHealth[p], playerKeys[p], playerTreasure[p]);
 		}
 }
+void fn_saveGame(const char *filename)
+{
+	FILE *f = fopen(filename, "w");
+	if(!f)
+	{
+		printf("Error saving game!\n");
+		return;
+	}
+
+	//save map
+	for(int r = 0; r < MAP_SIZE; r++)
+	{
+		for(int c = 0; c < MAP_SIZE; c++)
+		{
+			fputc(map[r][c], f);
+		}
+		fputc('\n', f);
+	}
+
+	//save traps
+	for(int r = 0; r < MAP_SIZE; r++)
+	{
+		for(int c = 0; c < MAP_SIZE; c++)
+		{
+			fprintf(f, "%d ", hiddenTrap[r][c]);
+		}
+		fprintf(f, "\n");
+	}
+
+	//Save players
+	for(int p = 0; p < playerCount; p++)
+	{
+		fprintf(f, "%d %d %d %d %d\n", playerRow[p], playerCol[p], playerHealth[p], playerKeys[p], playerTreasure[p]);
+	}
+	fclose(f);
+	printf("Game saved to %s\n", filename);
+	
+}
+
+void fn_loadGame(const char *filename)
+{
+	FILE *f = fopen(filename, "r");
+	if(!f)
+	{
+		printf("Error loading game!\n");
+		return;
+	}
+
+	//Load map
+	for(int r = 0; r < MAP_SIZE; r++)
+	{
+		for(int c = 0; c < MAP_SIZE; c++)
+		{
+			fscanf(f, "%c", &map[r][c]);
+		}
+		fgetc(f);//newline
+	}
+
+	//Load traps
+	for(int r = 0; r < MAP_SIZE; r++)
+	{
+		for(int c = 0; c < MAP_SIZE; c++)
+		{
+			fscanf(f, "%d ", &hiddenTrap[r][c]);
+		}
+	}
+
+	//Load players
+	for(int p = 0; p < playerCount; p++)
+	{
+		if(fscanf(f, "%d %d %d %d %d\n", &playerRow[p], &playerCol[p], &playerHealth[p], &playerKeys[p], &playerTreasure[p])!=5)
+		{
+			printf("Error reading player %d data\n", p+1);
+		}
+	}
+	fclose(f);
+	printf("Game loaded from %s\n", filename);	
+}
 
 int fn_movePlayer(int index, char move)
 {
@@ -265,26 +343,47 @@ int fn_movePlayer(int index, char move)
 int main()
 {
 	srand(time(NULL)); // random seed
-	fn_initializeMap();
+	
+	char choice;
+	printf("Start new game (N) or load game (L)? ");
+	scanf(" %c", &choice);
+
+	if(choice == 'L' || choice == 'l')
+	{
+		fn_loadGame("savegame.txt");
+	}
+	else
+	{
+		fn_initializeMap();
+	}
 	fn_printMap();
 
 	char move;
 	int currentPlayer = 0;
 	int gameOver = 0;
+
 	while (!gameOver)
 	{
 		if(playerHealth[currentPlayer] > 0)
 		{
-			printf("\nPlayer %d's turn (W/A/S/D, Q to quit): ", currentPlayer+1);
+			printf("\nPlayer %d's turn (W/A/S/D, Q to quit, S to save): ", currentPlayer+1);
 			scanf(" %c", &move);
 			if(move == 'Q' || move == 'q')
 			{
 				break;
 			}
-			if(fn_movePlayer(currentPlayer, move))
+			if(move == 'S' || move == 's')
 			{
-				gameOver = 1;
-			}	
+				fn_saveGame("savegame.txt");
+			}
+			else
+			{
+				if(fn_movePlayer(currentPlayer, move))
+				{
+					gameOver = 1;
+				}
+			}
+	
 			fn_printMap();
 		}
 		currentPlayer = (currentPlayer + 1) % playerCount;//next player
