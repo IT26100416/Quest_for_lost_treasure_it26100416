@@ -44,7 +44,7 @@ void fn_initializeMap()
 	{
 		int r = rand() % MAP_SIZE;
 		int c = rand() % MAP_SIZE;
-		if(map[r][c] == EMPTY && r > 0 && r < MAP_SIZE - 1 && c > 0 && c < MAP_SIZE - 1)
+		if(map[r][c] == EMPTY)
 		{
 			map[r][c] = WALL;
 			placedWalls++;
@@ -122,19 +122,16 @@ void fn_initializeMap()
 		}
 	}
 
-	//Place player
-	for(int p = 0; p < MAP_SIZE; p++)
-	{
-		int r,c;
+	//Place player 1
+	int r,c;
 		do
 		{
 			r = rand() % MAP_SIZE;
 			c = rand() % MAP_SIZE;
 		}while (map[r][c] != EMPTY);
 
-		playerRow[p] = r;
-		playerCol[p] = c;
-	}
+		playerRow[0] = r;
+		playerCol[0] = c;
 }
 
 void fn_printMap()
@@ -163,11 +160,48 @@ void fn_printMap()
 	}
 }
 
+void fn_movePlayer(int index, char move)
+{
+	int r = playerRow[index];
+	int c = playerCol[index];
+
+	if(move == 'W' || move == 'w')
+	{
+		r--;
+	}
+	else if(move == 'S' || move == 's')
+	{
+		r++;
+	}
+	else if(move == 'A' || move == 'a')
+	{
+		c--;
+	}
+	else if(move == 'D' || move == 'd')
+	{
+		c++;
+	}
+	//check if valid (not wall and outside)
+	if(r >= 0 && MAP_SIZE && c >= 0 && c < MAP_SIZE && map[r][c] != WALL)
+	{
+		playerRow[index] = r;
+		playerCol[index] = c;
+	}
+}
+
 int main()
 {
 	srand(time(NULL)); // random seed
 	fn_initializeMap();
 	fn_printMap();
+
+	char move;
+	printf("Enter move (W/A/S/D): ");
+	scanf(" %c", &move);
+
+	fn_movePlayer(0, move);
+	fn_printMap();
+
 	return 0;
 }
 
