@@ -13,9 +13,10 @@
 char map[MAP_SIZE][MAP_SIZE];
 int hiddenTrap[MAP_SIZE][MAP_SIZE];
 
-int playerCount = 3;
-int playerRow[3];
-int playerCol[3];
+int playerHealth = 10;
+int playerRow = 0, playerCol = 0;
+int playerKeys  = 0;
+int playerTreasure = 0;
 
 void fn_initializeMap()
 {
@@ -130,8 +131,8 @@ void fn_initializeMap()
 			c = rand() % MAP_SIZE;
 		}while (map[r][c] != EMPTY);
 
-		playerRow[0] = r;
-		playerCol[0] = c;
+		playerRow = r;
+		playerCol = c;
 }
 
 void fn_printMap()
@@ -141,29 +142,24 @@ void fn_printMap()
 		for(int c = 0; c < MAP_SIZE; c++)
 		{
 			char tile = map[r][c];
-			int printed = 0;
-			for(int p = 0; p < playerCount; p++)
+			if(playerRow == r && playerCol == c)
 			{
-				if(playerRow[p] == r && playerCol[p] == c)
-				{
-					printf("%d ", p+1);
-					printed = 1;
-					break;
-				}
+				printf("P ");//player
 			}
-			if(!printed)
+			else
 			{
 				printf("%c ", tile);
 			}
 		}
 		printf("\n");
 	}
+	printf("Health: %d | Keys: %d | Treasure: %d\n", playerHealth, playerKeys, playerTreasure);
 }
 
-void fn_movePlayer(int index, char move)
+void fn_movePlayer(char move)
 {
-	int r = playerRow[index];
-	int c = playerCol[index];
+	int r = playerRow;
+	int c = playerCol;
 
 	if(move == 'W' || move == 'w')
 	{
@@ -182,10 +178,57 @@ void fn_movePlayer(int index, char move)
 		c++;
 	}
 	//check if valid (not wall and outside)
-	if(r >= 0 && MAP_SIZE && c >= 0 && c < MAP_SIZE && map[r][c] != WALL)
+	if(r < 0 || r >= MAP_SIZE || c < 0 || c >= MAP_SIZE)
 	{
-		playerRow[index] = r;
-		playerCol[index] = c;
+		return;
+	}
+
+	char tile = map[r][c];
+
+	if(tile == WALL)
+	{
+		return;
+	}
+
+	if(tile == DOOR && playerKeys == 0)
+	{
+		printf("Door is locked! Need a key.\n");
+		return;
+	}
+
+	playerRow = r;
+	playerCol = c;
+
+	if(tile == TREASURE)
+	{
+		playerTreasure++;
+		map[r][c] = EMPTY;
+		printf("Collected treasure! Total: %d\n", playerTreasure);
+	}
+	else if(tile == HEALTH)
+	{
+		playerHealth += 2;
+		map[r][c] = EMPTY;
+		printf("Picked up health! HP: %d\n", playerHealth);
+	}
+	else if(tile == KEY)
+	{
+		playerKeys++;
+		map[r][c] = EMPTY;
+		printf("Picked up a key! Keys: %d\n", playerKeys);
+	}
+	else if(tile == DOOR && playerKeys > 0)
+	{
+		playerKeys--;
+		map[r][c] = EMPTY;
+		printf("Unlocked a door! Keys left: %d\n", playerKeys);
+	}
+
+	if(hiddenTrap[r][c] == 1)
+	{
+		playerHealth -= 3;
+		hiddenTrap[r][c] = 0;//trap triggered
+		printf("Stepped on a trap! HP: %d\n", playerHealth);
 	}
 }
 
@@ -196,12 +239,19 @@ int main()
 	fn_printMap();
 
 	char move;
-	printf("Enter move (W/A/S/D): ");
-	scanf(" %c", &move);
-
-	fn_movePlayer(0, move);
+	while (playerHealth > 0)
+	{
+		printf("Enter move (W/A/S/D, Q to quit): ");
+		scanf(" %c", &move);
+		if(move == 'Q' || move == 'q')
+		{
+			break;
+		}
+	fn_movePlayer(move);
 	fn_printMap();
+	}
 
+	printf("Game Over!\n");
 	return 0;
 }
 
