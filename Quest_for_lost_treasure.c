@@ -10,6 +10,14 @@
 #define KEY 'K'
 #define DOOR 'D'
 
+//Colours
+#define RESET "\x1b[0m"
+#define RED "\x1b[31m"
+#define GREEN "\x1b[32m"
+#define YELLOW "\x1b[33m"
+#define BLUE "\x1b[34m"
+#define BOLD "\x1b[1;37m"
+
 char map[MAP_SIZE][MAP_SIZE];
 int hiddenTrap[MAP_SIZE][MAP_SIZE]; // 1 = trap , 0 = no trap
 
@@ -65,7 +73,6 @@ void fn_initializeMap()
 		int c = rand() % MAP_SIZE;
 		if(map[r][c] == EMPTY)
 		{
-
 			map[r][c] = TREASURE;
 			placedTreasures++;
 		}
@@ -81,9 +88,7 @@ void fn_initializeMap()
 		{
 			map[r][c] = HEALTH;
 			placedHealth++;
-
 		}
-
 	}
 
 	//Random keys
@@ -111,7 +116,6 @@ void fn_initializeMap()
 			map[r][c] = DOOR;
 			placedDoors++;
 		}
-
 	}
 
 	//Hidden traps
@@ -137,12 +141,35 @@ void fn_initializeMap()
 			c = rand() % MAP_SIZE;
 		}while (map[r][c] != EMPTY);
 
-		playerRow[p] = r;
-		playerCol[p] = c;
+		playerRow[p] 	= r;
+		playerCol[p] 	= c;
 		playerHealth[p] = 10;
-		playerKeys[p] = 0;
+		playerKeys[p] 	= 0;
 		playerTreasure[p] = 0;
+	}
+}
 
+void fn_printTile(char tile)
+{
+	if(tile == TREASURE)
+	{
+		printf(YELLOW "T " RESET);
+	}
+	else if(tile == HEALTH)
+	{
+		printf(GREEN "H " RESET);
+	}
+	else if(tile == KEY)
+	{
+		printf(BLUE "K " RESET);
+	}
+	else if(tile == DOOR)
+	{
+		printf(RED "D " RESET);
+	}
+	else 
+	{
+		printf("%c ", tile);
 	}
 }
 
@@ -158,23 +185,24 @@ void fn_printMap()
 			{
 				if(playerRow[p] == r && playerCol[p] == c && playerHealth[p] > 0)
 				{
-					printf("%d ", p+1);
+					printf(BOLD "%d "RESET, p+1);
 					printed = 1;
 					break;
 				}
 			}
 			if(!printed)
 			{
-				printf("%c ", tile);
+				fn_printTile(map[r][c]);
 			}
 		}
 		printf("\n");
 	}
 		for(int p = 0; p < playerCount; p++)
 		{
-			printf("Player %d -> HP:%d Keys:%d Treasure:%d\n", p+1, playerHealth[p], playerKeys[p], playerTreasure[p]);
+			printf("Player %d -> HP:%d | Keys:%d | Treasure:%d\n", p+1, playerHealth[p], playerKeys[p], playerTreasure[p]);
 		}
 }
+
 void fn_saveGame(const char *filename)
 {
 	FILE *f = fopen(filename, "w");
@@ -210,8 +238,7 @@ void fn_saveGame(const char *filename)
 		fprintf(f, "%d %d %d %d %d\n", playerRow[p], playerCol[p], playerHealth[p], playerKeys[p], playerTreasure[p]);
 	}
 	fclose(f);
-	printf("Game saved to %s\n", filename);
-	
+	printf("Game saved to %s\n", filename);	
 }
 
 void fn_loadGame(const char *filename)
@@ -390,9 +417,7 @@ int main()
 	{
 		fn_initializeMap();
 	}
-
-	fn_printMap();
-
+ 
 	char move;
 	int currentPlayer = 0;
 	int gameOver = 0;
@@ -401,7 +426,11 @@ int main()
 	{
 		if(playerHealth[currentPlayer] > 0)
 		{
-			printf("\nPlayer %d's turn (W/A/S/D, Q to quit, E to save): ", currentPlayer+1);
+			fn_printMap();
+
+			printf(GREEN "\n    >> Player %d's turn <<\n" RESET, currentPlayer+1);
+			printf("(W/A/S/D)-move, Q-quit, E-save: ");
+
 			scanf(" %c", &move);
 			if(move == 'Q' || move == 'q')
 			{
@@ -420,11 +449,11 @@ int main()
 				}
 			}
 	
-			fn_printMap();
 		}
 		currentPlayer = (currentPlayer + 1) % playerCount;//next player
 	}	
 	printf("\nGame Over!\n");
+
 	return 0;
 }
 

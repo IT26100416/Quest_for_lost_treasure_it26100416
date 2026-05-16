@@ -1,1 +1,3 @@
 Player 2 won with score 1
+Player 2 won with score 5
+Player 3 won with score 5
